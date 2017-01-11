@@ -1,0 +1,40 @@
+'------------------------------------------------------------------------------------------------
+'									CRC16 Memory Optimized Demo
+'This Demo sure how to get the proper CRC16 	
+'Please noted that, here are several different ways to calculate CRC16, we recommand use the 
+'lookup table method to asure the computation as little as possible, since the embedded modules 
+'have limited computation power
+'This demo read CRC Table value directly from romfile.  This optimize the usage of memory, however,
+'frequently reading from romfile can significantly slow down the system
+'------------------------------------------------------------------------------------------------
+
+include "global.tbh"
+
+Function crc16(s As String) As word
+	dim w, uIndex as word
+	dim uchCRCHi, uchCRCLo as word
+	dim wTemp, wTemp1 as word
+	uchCRCHi = &hFF					'filled up CRC register with 1s
+	uchCRCLo = &hFF
+	
+	for w = 1 to len(s)
+		wTemp = asc(mid(s,w,1))
+		uIndex = uchCRCHi XOR wTemp
+		wTemp = uIndex*7+1
+		romfile.pointer = wTemp
+		wTemp = romfile.getdata(6)
+		wTemp1 = wTemp/256
+		wTemp = wTemp - wTemp1*256
+		uchCRCHi = uchCRCLo XOR wTemp
+		uchCRCLo = wTemp1
+	next w	
+    crc16 = uchCRCLo*256 + uchCRCHi   'swap the CRCLo and CRCHi
+End Function
+
+sub on_sys_init
+	romfile.open("CRC.txt")
+	dim wA as word
+	dim sA as string
+	sA = chr(1)+chr(2)+chr(3)
+	wA= crc16(sA)
+end sub

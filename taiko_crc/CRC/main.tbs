@@ -1,0 +1,76 @@
+'------------------------------------------------------------------------------------------------
+'									CRC16 Demo
+'This Demo sure how to get the proper CRC16 	
+'Please noted that, here are several different ways to calculate CRC16, we recommand use the 
+'lookup table method to asure the computation as little as possible, since the embedded modules 
+'have limited computation power
+'------------------------------------------------------------------------------------------------
+
+include "global.tbh"
+
+'XOR function: in TIDE v1.15.09-Beta, and TiOS v1.20.02 The XOR operator is not properly 
+'implemented yet, Therefore I wrote this XOR function.  This function can be replaced by acutal
+'XOR operator in later version. 
+
+function wXOR(wA as word, wB as word) as word
+	dim sA as string
+	dim sB as string
+	dim sTemp as string
+	sTemp = ""
+	dim i as byte
+	sA = bin(wA)
+	sB = bin(wB)				'convert word to binary string
+	sA = right(sA,len(sA)-2)	
+	sB = right(sB,len(sB)-2)	
+	for i = len(sA) to 15
+		sA = "0"+sA				
+	next i	
+	for i = len(sB) to 15
+	sB = "0"+sB					'fill up the Zeros
+	next i	
+	for i = 1 to 16
+		if mid(sA,i,1) <> mid(sB,i,1) then
+			sTemp = sTemp + "1"
+		else sTemp = sTemp +"0" 
+		end if
+	next i	
+	wXOR = val("&b"+ sTemp)		
+end function
+
+'---------------------------------------------------------------------------------------------------
+Function crc16(s As String) As word
+	dim ss as string
+	dim w as word	
+	dim uIndex as word
+	dim uchCRCHi as word
+	dim uchCRCLo as word
+	dim wTemp as word
+	dim wTemp1 as word
+	uchCRCHi = &hFF					'filled up CRC register with 1s
+	uchCRCLo = &hFF
+	
+	for w = 1 to len(s)
+		wTemp = asc(mid(s,w,1))
+		uIndex = wXOR(uchCRCHi,wTemp)
+		wTemp = uIndex*7+1
+		
+		romfile.pointer = wTemp
+		ss = romfile.getdata(6)
+		wTemp1 = val(left(ss,4))
+		wTemp = val("&h"+right(ss,2))
+		uchCRCHi = wXOR(uchCRCLo,wTemp)
+		uchCRCLo = wTemp1
+	next w	
+    crc16 = uchCRCLo*256 + uchCRCHi   'swap the CRCLo and CRCHi
+End Function
+
+sub on_sys_init
+	romfile.open("CRC.txt")
+	
+	dim wa as word
+	dim sa as string
+	sa = chr(0)+chr(0)+chr(0)
+	
+	wa = crc16(sa)
+
+end sub
