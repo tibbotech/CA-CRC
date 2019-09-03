@@ -1,5 +1,3 @@
-# CA-CRC
+# CRC application
 
-To download the most recent project without installing GIT, please press the green "Clone or Download" button and select "Download ZIP".
-
-For more detail about this project, please visit <a href="http://tibbo.com/programmable/applications/crc16.html" target="_blank">Project Description Page</a>
+CRC is a type of hash function used to produce a checksum of a small, fixed number of bits checked against a block of data, such as a packet of network traffic or a block of a computer file. The checksum is used to detect errors after transmission or storage.
